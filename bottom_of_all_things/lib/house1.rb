@@ -14,7 +14,7 @@ class House
     'the house that Jack built',
   ]
 
-  def initialize(random = false)
+  def initialize(random)
     @pieces = DATA.shuffle if random
   end
 
@@ -39,8 +39,8 @@ end
 
 class Controller
   def play_house(random = false)
-    puts "\n--random? #{random}--"
-    puts House.new(random).line(12)
+    "\n--random? #{random}--\n" +
+      House.new(random).line(12)
   end
 end
 

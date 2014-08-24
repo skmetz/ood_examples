@@ -16,7 +16,7 @@ class House
 
   attr_reader :pieces
 
-  def initialize(order = :default)
+  def initialize(order)
     @pieces = initialize_pieces(order)
   end
 
@@ -60,8 +60,8 @@ end
 
 class Controller
   def play_house(choice = nil)
-    puts "\n--#{choice}--"
-    puts House.new(choice).line(12)
+    "\n--#{choice}--\n" +
+      House.new(choice).line(12)
   end
 end
 

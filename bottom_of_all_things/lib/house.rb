@@ -31,8 +31,8 @@ end
 
 class Controller
   def play_house
-    puts "\n----"
-    puts House.new.line(12)
+    "\n----\n" +
+      House.new.line(12)
   end
 end
 

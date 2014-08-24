@@ -16,7 +16,7 @@ class House
 
   attr_reader :pieces
 
-  def initialize(order = :default)
+  def initialize(order)
     @pieces = initialize_pieces(order)
   end
 
@@ -36,12 +36,12 @@ class House
   def initialize_pieces(order)
     case order
     when :random
-      Random
+      Random.new
     when :mostly_random
-      MostlyRandom
+      MostlyRandom.new
     else
-      Default
-    end.new.order(DATA)
+      Default.new
+    end.order(DATA)
   end
 end
 
@@ -66,8 +66,8 @@ end
 
 class Controller
   def play_house(choice = nil)
-    puts "\n--#{choice}--"
-    puts House.new(choice).line(12)
+    "\n--#{choice}--\n" +
+      House.new(choice).line(12)
   end
 end
 
