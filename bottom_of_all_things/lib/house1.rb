@@ -52,9 +52,9 @@ puts Controller.new.play_house(true)
 # line 18 is hiding the else of the condition
 #
 # Repeat this code for the summary.
-#   Random is a form of primative obsession.
+#   Random is a form of primitive obsession.
 #   The conditional on line 18 really should have two parts.
-#   If you write the conditional out, you can see the objects.
+#   If you write the conditional out you can see the objects.
 #   Rule:
 #     The specific values (both true and false) of the thing I'm switching on becomes an object.
 #     The concept gets a name.
@@ -62,12 +62,12 @@ puts Controller.new.play_house(true)
 #     This message returns the bit that used to be in true/false branch.
 #   Therefore:
 #     The problem switches from knowing why to switch and what to do, to
-#     knowing why to switch, and what object to get when I do.
+#     knowing why to switch and what object to get when I do.
 #   This disperses behavior into small, reuseable objects.
 #
 #   Also, if your only use of a value is to turn it into an object,
 #   that should have happened at the first possible place, back when the value
-#   was first known.  If you convert primatives into objects at first chance,
-#   these objects will attract behaviour.  If you pass primatives around, you'll
-#   switch on them everywhere, and miss the chance to collect all of this
-#   confusingly dispersed behavior in a single, cohesive object.
+#   was first known.  If you convert primitives into objects at first chance
+#   these objects will attract behaviour.  If you pass primitives around you'll
+#   switch on them everywhere and will miss the chance to collect all of this
+#   confusingly dispersed behavior in a single, cohesive, reuseable object.

@@ -81,5 +81,5 @@ puts Controller.new.play_house(:mostly_random)
 # Each branch of the case statement could become a polymorphic method in
 # a class for the specific value in the condition.
 #
-# Here I talk argument 'order' and the only use I make of it is to choose
+# Here I take argument 'order' and the only use I make of it is to choose
 # a class in #initialize_pieces.  This choice should be made before we get here.

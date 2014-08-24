@@ -60,8 +60,8 @@ puts Controller.new.play_house(:mostly_random)
 
 # Now we have 3 choices, so can't use a boolean.
 # Switched to a symbol and case statement.
-# Here we're explicit about the default where before we were not, but it
-# was still there, the code obscured it.
+# Here we're explicit about the default where before we were not. It
+# was there but the code obscured it.
 
-# Here I know the reason I might switch, and the thing that should happen
-# when each switch happens.
+# Here I know the reason I might switch and the thing that should happen
+# when I do.
