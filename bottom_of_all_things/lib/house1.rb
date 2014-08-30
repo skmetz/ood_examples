@@ -14,7 +14,7 @@ class House
     'the house that Jack built',
   ]
 
-  def initialize(random)
+  def initialize(random = false)
     @pieces = DATA.shuffle if random
   end
 
@@ -39,15 +39,19 @@ end
 
 class Controller
   def play_house(random = false)
-    "\n--random? #{random}--\n" +
-      House.new(random).line(12)
+    House.new(random).line(12)
   end
 end
 
 
-puts Controller.new.play_house
-puts Controller.new.play_house(false)
-puts Controller.new.play_house(true)
+puts "\n--random? false   --\n" + Controller.new.play_house(false)
+puts "\n--random? true    --\n" + Controller.new.play_house(true)
+
+# --random? false   --
+# This is the horse and the hound and the horn that belonged to the farmer sowing his corn that kept the rooster that crowed in the morn that woke the priest all shaven and shorn that married the man all tattered and torn that kissed the maiden all forlorn that milked the cow with the crumpled horn that tossed the dog that worried the cat that killed the rat that ate the malt that lay in the house that Jack built.
+
+# --random? true    --
+# This is the rat that ate the malt that lay in the priest all shaven and shorn that married the farmer sowing his corn that kept the cat that killed the house that Jack built the horse and the hound and the horn that belonged to the man all tattered and torn that kissed the cow with the crumpled horn that tossed the maiden all forlorn that milked the dog that worried the rooster that crowed in the morn that woke.
 
 # line 18 is hiding the else of the condition
 #

@@ -16,7 +16,7 @@ class House
 
   attr_reader :pieces
 
-  def initialize(order)
+  def initialize(order = nil)
     @pieces = initialize_pieces(order)
   end
 
@@ -57,19 +57,15 @@ class House
   end
 end
 
-
 class Controller
   def play_house(choice = nil)
-    "\n--#{choice}--\n" +
-      House.new(choice).line(12)
+    House.new(choice).line(12)
   end
 end
 
-
-puts Controller.new.play_house
-puts Controller.new.play_house(:default)
-puts Controller.new.play_house(:random)
-puts Controller.new.play_house(:mostly_random)
+puts "\n----\n"               + Controller.new.play_house
+puts "\n--:random--\n"        + Controller.new.play_house(:random)
+puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)
 
 # If I pulled the logic within each branch out into a method, what would I
 # name the methods?

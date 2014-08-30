@@ -16,7 +16,7 @@ class House
 
   attr_reader :pieces
 
-  def initialize(orderer)
+  def initialize(orderer = Default.new)
     @pieces = orderer.order(DATA)
   end
 
@@ -56,8 +56,7 @@ end
 
 class Controller
   def play_house(choice = nil)
-    "\n--#{choice}--\n" +
-      House.new(orderer_for(choice)).line(12)
+    House.new(orderer_for(choice)).line(12)
   end
 
   def orderer_for(choice)
@@ -73,7 +72,6 @@ class Controller
 end
 
 
-puts Controller.new.play_house
-puts Controller.new.play_house(:default)
-puts Controller.new.play_house(:random)
-puts Controller.new.play_house(:mostly_random)
+puts "\n----\n"               + Controller.new.play_house()
+puts "\n--:random--\n"        + Controller.new.play_house(:random)
+puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)

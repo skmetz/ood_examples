@@ -65,15 +65,14 @@ end
 
 class Controller
   def play_house(choice = nil)
-    "\n--#{choice}--\n" +
-      House.new(Order.for(choice)).line(12)
+    House.new(Order.for(choice)).line(12)
   end
 end
 
 
-puts Controller.new.play_house
-puts Controller.new.play_house(:random)
-puts Controller.new.play_house(:mostly_random)
+puts "\n----\n"               + Controller.new.play_house
+puts "\n--:random--\n"        + Controller.new.play_house(:random)
+puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)
 
 # Create an Order module to hold the Ordering classes, and put the factory
 # method on the module.
