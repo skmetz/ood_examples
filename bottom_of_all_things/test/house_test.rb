@@ -2,7 +2,7 @@ gem 'minitest', '~> 5.3'
 require 'minitest/autorun'
 require 'minitest/pride'
 
-require_relative '../lib/house'
+require_relative '../lib/house3x'
 
 class HouseTest < Minitest::Test
   attr_reader :tale

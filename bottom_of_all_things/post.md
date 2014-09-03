@@ -1,14 +1,13 @@
-I've been teaching a fair amount, which means I've been revisiting my 'example problems' regularly.  When I initially chose the class problems I believed I understood them completely (hubris, I know), but now that I've worked them repeatedly I'm seeing new and surprising things.
+I've been teaching a fair amount, which means I've been revisiting my 'class problems' regularly.  When I chose these problems I believed that I understood them completely (hubris, I know) but now that I've worked them repeatedly I'm seeing new and surprising things.
 
-The things I'm seeing have to do with the _shape_ of code. Code can be written, or shaped, in many ways, and I've always thought that for any given problem many different shapes of code provided equally 'good' solutions.  I think of programming as an art and I'm willing to give artists a fair amount of expressive leeway.
+These new things have to do with the _shape_ of code. Code can be written, or shaped, in many ways, and I've always thought that for any given problem many different code shapes gave equally 'good' solutions.  (I think of programming as an art and am willing to give artists a fair amount of expressive leeway.)
 
-But now I'm beginning to change my mind.  These days it feels like all shapes are not equally 'good', that some code shapes expose information that others conceal.  For example, below is a slightly modified version<a href="#note1">[1]</a> of the code used in my previous blog post,
-<a href="http://www.sandimetz.com/blog/2014/05/28/betting-on-wrong" target="_blank">Getting It Right by Betting on Wrong</a>.
+But I'm having a change of heart.  These days it feels like all shapes are not equally 'good', that some code shapes are better than others because they _expose_ information that others conceal..  This blog post illustrates the transition I'm undergoing.
 
+Example 1 below is a slightly modified version <a href="#note1">[1]</a> of the code used in my previous blog post <a href="http://www.sandimetz.com/blog/2014/05/28/betting-on-wrong" target="_blank">Getting It Right by Betting on Wrong</a>, about the
+<a href="http://en.wikipedia.org/wiki/Open/closed_principle" target="_blank">Open/Closed </a> principle.  The ```House``` class contains code to produce the tale 'The House that Jack Built' <a href="#note2">[2]</a>. The ```Controller``` class invokes ```House#line``` in its ```#play_house``` method on line 33.  Line 37 invokes the controller.  The output is on line 40.
 
-
-###Example: The House that Jack Built
-
+###Example 1: The House that Jack Built
 <pre id="house" class="line-numbers"><code class="language-ruby">class House
   DATA = [
     'the horse and the hound and the horn that belonged to',
@@ -51,12 +50,14 @@ puts "\n----\n" + Controller.new.play_house
 # This is the horse and the hound and the horn that belonged to the farmer sowing his corn that kept the rooster that crowed in the morn that woke the priest all shaven and shorn that married the man all tattered and torn that kissed the maiden all forlorn that milked the cow with the crumpled horn that tossed the dog that worried the cat that killed the rat that ate the malt that lay in the house that Jack built.
 </code></pre>
 
+Example 1 works fine but let's imagine that requirements change.  Our customer tells us that they like ```House``` and they want it to continue to work as is but they'd also like a variant that randomizes the data before producing the tale.  
 
+Example 2 meets this new requirement.  ```House#initialize``` now takes ```random```,  an optional ```Boolean```.  If ```random``` is ```false```, ```House``` behaves normally, if ```true```, ```House``` randomizes and caches the data before producing the tale.
 
-###Example 1
-<pre class="line-numbers" data-line="4,21,28"><code class="language-ruby">class House
+###Example 2
+<pre class="line-numbers" data-line="4,21"><code class="language-ruby">class House
   # ...
-  def initialize(random)
+  def initialize(random = false)
     @pieces = DATA.shuffle if random
   end
 
@@ -78,13 +79,11 @@ puts "\n----\n" + Controller.new.play_house
   end
 end
 
-
 class Controller
   def play_house(random = false)
     House.new(random).line(12)
   end
 end
-
 
 puts "\n--random? false--\n" + Controller.new.play_house(false)
 puts "\n--random? true --\n" + Controller.new.play_house(true)
@@ -95,25 +94,18 @@ puts "\n--random? true --\n" + Controller.new.play_house(true)
 # --random? true --
 # This is the rat that ate the malt that lay in the priest all shaven and shorn that married the farmer sowing his corn that kept the cat that killed the house that Jack built the horse and the hound and the horn that belonged to the man all tattered and torn that kissed the cow with the crumpled horn that tossed the maiden all forlorn that milked the dog that worried the rooster that crowed in the morn that woke.</code></pre>
 
-Two if statements up there.
+Example 2 now contains conditionals on line 4 and 21.  These conditionals collaborate to meet the 'random' requirement but the way the code is shaped makes it hard to see that these two conditionals are about the same concept.  Not only are they far apart in the code but one is expressed as a trailing ```if``` (which checks the value of ```random```) and the other as ```||=``` (which checks the value of ```@pieces```).
 
-in ```initialize```:
+Changing the requirements again will make the problem more obvious.  Perhaps, when shown the output, our customer decides they'd like a third variant.  The randomized version can end in very unsatisfying ways (for example, with 'the rat that ate').  Our customer would like a 'mostly random' version which randomizes all pieces except the last.  This 'mostly random' version should always end with 'the house that Jack built'.
 
-If ```random``` is true, shuffle ```DATA``` and save the result in ```@pieces```.
+Example 3 shows the interesting new bits of code.  
 
-In ```pieces```
-
-If ```@pieces``` is nil,
-  initialize it with ```DATA``` and return the result
-otherwise
-  return the current value of ```@pieces```
-
-###Example 2
-<pre class="line-numbers"><code class="language-ruby">class House
+###Example 3
+<pre class="line-numbers" data-line="6,11-17"><code class="language-ruby">class House
   # ...
   attr_reader :pieces
 
-  def initialize(order)
+  def initialize(order = nil)
     @pieces = initialize_pieces(order)
   end
 
@@ -129,7 +121,6 @@ otherwise
     end
   end
 end
-
 
 class Controller
   def play_house(choice = nil)
@@ -150,10 +141,33 @@ puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)
 # --:mostly_random--
 # This is the man all tattered and torn that kissed the cow with the crumpled horn that tossed the maiden all forlorn that milked the horse and the hound and the horn that belonged to the dog that worried the malt that lay in the rooster that crowed in the morn that woke the rat that ate the cat that killed the farmer sowing his corn that kept the priest all shaven and shorn that married the house that Jack built.</code></pre>
 
-Text, text text
+Now that we have three different situations it's no longer enough to pass a boolean so ```House```'s initialize method now takes a symbol (:random, :mostly_random or anything else).  ```House#initialize``` sets the value of ```@pieces``` to the result of calling ```initialize_pieces``` on this symbol.  ```#initialize_pieces``` contains a case statement that checks the symbol, puts the data in the correct order and then returns it.
 
-###Example 2a
+Example 3 does two new things.  First, it adds a third variant, and second, it moves _all_ of the code relating to the concept of 'data order' into a single ```case``` statement.  
 
+While we certainly needed to do the first we could easily have gotten by without doing the second.  We _could_ have kept the existing ```#pieces``` method and left the else branch off of the new case statement, like so:
+<pre class="line-numbers"><code class="language-ruby">  def initialize_pieces(order)
+    case order
+    when :random
+      DATA.shuffle
+    when :mostly_random
+      DATA[0...-1].shuffle &lt;&lt; DATA.last
+    end
+  end
+
+  def pieces
+    @pieces ||= DATA
+  end</code></pre>
+
+This works, yes, but the code doesn't feel natural.  Once the number of variants forces us to change to a case statement it feels more 'right' to expect the case statement to provide every order, including the default.  Thus, Example 3 line 17 replaces Example 2 line 21 and all of the code that controls the concept of 'order' is now in the same place.
+
+The key idea here is that 'not changing the order' is a real thing, as real as randomizing or 'mostly' randomizing it.  It's not as if :random and :mostly\_random represent one concept and 'doing nothing' represents another.  There's one concept, 'order', and a number of different possibilities.  One possible way to order something is to _leave its current order unchanged_; this algorithm is as valid as any other.
+
+Now that we're treating every order as a real thing, what next?  Well, as a thought exercise, what would you do if there was lots of code in each branch of the case statement, so much that you felt obliged to extract each branch into a method of its own.  What would you name these methods?
+
+Example 3a does just this.  It names the concepts represented by each branch and moves the code into new methods with those names.  
+
+###Example 3a
 <pre class="line-numbers"><code class="language-ruby">class House
   # ...
   def initialize_pieces(order)
@@ -180,9 +194,16 @@ Text, text text
   end
   # ...</code></pre>
 
-Text text
+These ```xxx_order``` methods all represent 'order' variants.  The fact that we can even imagine the name ```default_order``` supports the notion that it's the same kind of thing as ```random_order``` or ```mostly_random_order```.
 
-###Example 3
+Once
+
+  1. the choice of 'order' is controlled in a single place and
+  2. each order variant is given a name,
+
+it's becomes easy to see 'order' objects hidden in this code.  Instead of forcing ```House``` to know both the values of order upon which it should switch and what to do in every case, we can dispearse the 'what to do' logic into other objects.  Example 4 creates a new class for each kind of order.
+
+###Example 4
 
 <pre class="line-numbers"><code class="language-ruby">class House
   # ...
@@ -217,9 +238,15 @@ class MostlyRandom
   end
 end</code></pre>
 
-Text, text, text
+Example 4 created three new classes, each of which plays the 'orderer' role.  Each 'orderer' implements #order to take a list and return it in the correct order.
 
-###Example 3a
+These things are extremely easy to test. :-)  It's a feature.
+
+xxxxxxxxxxxxxxxxxx
+
+Let's do one small refactoring before the next point.  In Example 4a, the
+
+###Example 4a
 
 <pre class="line-numbers" data-line="13"><code class="language-ruby">class House
   # ...
@@ -240,7 +267,7 @@ House takes a symbol and uses it for nothing other than to convert it to a class
 
 The thing that passed me the symbol knew what they wanted, they should create and give me the class. Push the object creation back to them.
 
-###Example 4
+###Example 5
 
 <pre class="line-numbers"><code class="language-ruby">class House
   # ...
@@ -272,7 +299,7 @@ end</code></pre>
 
 Text, text, text
 
-###Example 5
+###Example 6
 
 <pre class="line-numbers"><code class="language-ruby">class Controller
   # ...
@@ -285,7 +312,7 @@ end</code></pre>
 
 May as well move the factory to an Order module.
 
-###Example 6
+###Example 7
 
 <pre class="line-numbers"><code class="language-ruby">module Order
   def self.for(choice)
@@ -414,9 +441,39 @@ With two, really, who cares, but as soon as you have 3, watch for churn.
 
 
 <a name="note1">[1]</a>
-For full examples plus tests, see
+All of this
 <a href="https://github.com/skmetz/ood_examples/tree/master/bottom_of_all_things/lib"
    target="_blank">
-  the code
+  code
 </a>
-on github.
+is on github.
+
+
+
+<a name="note2">[2]</a>
+<a href="http://en.wikipedia.org/wiki/This_Is_the_House_That_Jack_Built"
+   target="_blank">
+  This Is the House That Jack Built
+</a>
+is a
+<a href="http://en.wikipedia.org/wiki/Cumulative_tale"
+   target="_blank">
+  cumulative tale.
+</a>
+Cumulative tales are like
+<a href="http://en.wikipedia.org/wiki/Cumulative_song"
+   target="_blank">
+  cumulative songs
+</a>
+which in turn are one wikipedia hop from
+<a href="http://en.wikipedia.org/wiki/The_Complexity_of_Songs"
+   target="_blank">
+  the complexity of songs
+</a>
+which in turn link to the article on
+<a href="http://en.wikipedia.org/wiki/Computational_complexity_theory"
+   target="_blank">
+  computational complexity theory</a>.
+Tales and songs work great as examples because they let us practice dealing with complexity without requiring that we learn about revolving bank loans or shipping containers.  
+
+The domains are simple but the problems are surprisingly complex.
