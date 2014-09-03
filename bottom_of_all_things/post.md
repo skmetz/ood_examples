@@ -1,13 +1,11 @@
-Say some things.
+I've been teaching a fair amount, which means I've been revisiting my 'example problems' regularly.  When I initially chose the class problems I believed I understood them completely (hubris, I know), but now that I've worked them repeatedly I'm seeing new and surprising things.
 
-And then more things.
+The things I'm seeing have to do with the _shape_ of code. Code can be written, or shaped, in many ways, and I've always thought that for any given problem many different shapes of code provided equally 'good' solutions.  I think of programming as an art and I'm willing to give artists a fair amount of expressive leeway.
 
-The
-<a href="https://github.com/skmetz/ood_examples/tree/master/bottom_of_all_things/lib"
-   target="_blank">
-  example code
-</a>
-is on github.
+But now I'm beginning to change my mind.  These days it feels like all shapes are not equally 'good', that some code shapes expose information that others conceal.  For example, below is a slightly modified version<a href="#note1">[1]</a> of the code used in my previous blog post,
+<a href="http://www.sandimetz.com/blog/2014/05/28/betting-on-wrong" target="_blank">Getting It Right by Betting on Wrong</a>.
+
+
 
 ###Example: The House that Jack Built
 
@@ -47,22 +45,17 @@ class Controller
   end
 end
 
-
 puts "\n----\n" + Controller.new.play_house
 
 # ----
 # This is the horse and the hound and the horn that belonged to the farmer sowing his corn that kept the rooster that crowed in the morn that woke the priest all shaven and shorn that married the man all tattered and torn that kissed the maiden all forlorn that milked the cow with the crumpled horn that tossed the dog that worried the cat that killed the rat that ate the malt that lay in the house that Jack built.
 </code></pre>
 
-Text, text, text.
+
 
 ###Example 1
-<pre class="line-numbers"><code class="language-ruby">class House
-  DATA = [
-    'the horse and the hound and the horn that belonged to',
-     # ...
-  ]
-
+<pre class="line-numbers" data-line="4,21,28"><code class="language-ruby">class House
+  # ...
   def initialize(random)
     @pieces = DATA.shuffle if random
   end
@@ -102,15 +95,22 @@ puts "\n--random? true --\n" + Controller.new.play_house(true)
 # --random? true --
 # This is the rat that ate the malt that lay in the priest all shaven and shorn that married the farmer sowing his corn that kept the cat that killed the house that Jack built the horse and the hound and the horn that belonged to the man all tattered and torn that kissed the cow with the crumpled horn that tossed the maiden all forlorn that milked the dog that worried the rooster that crowed in the morn that woke.</code></pre>
 
-Text, Text, text.
+Two if statements up there.
+
+in ```initialize```:
+
+If ```random``` is true, shuffle ```DATA``` and save the result in ```@pieces```.
+
+In ```pieces```
+
+If ```@pieces``` is nil,
+  initialize it with ```DATA``` and return the result
+otherwise
+  return the current value of ```@pieces```
 
 ###Example 2
 <pre class="line-numbers"><code class="language-ruby">class House
-  DATA = [
-    'the horse and the hound and the horn that belonged to',
-    # ...
-  ]
-
+  # ...
   attr_reader :pieces
 
   def initialize(order)
@@ -373,36 +373,50 @@ end
 
 puts "\n----\n"               + Controller.new.play_house
 puts "\n--:random--\n"        + Controller.new.play_house(:random)
-puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)
-
-# Create an Order module to hold the Ordering classes, and put the factory
-# method on the module.
-</code></pre>
+puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)</code></pre>
 
 Passing the random Boolean (Example 1, line 7) or the order Symbol (Example 2, line 9) to House forces House to know about every possible value and to supply the appropriate behavior for each case. This is a form of
 <a href="http://sourcemaking.com/refactoring/primitive-obsession"
    target="_blank">
   primitive obsession
 </a>.
-These arguments are objects; you shouldn't be making decisions about what to do based on their values, you should be sending them messages and replying on them to supply their own behavior.  
+These arguments are objects; you shouldn't be making decisions about what to do based on their values, you should instead send them messages and reply on them to supply their own behavior.  
 
 In an example small enough to fit into a blog post this code isn't so bad but it stands proxy for the real world where grown-up variants are much more painful.  
 
-In real life if I'm switching on the order Symbol here in House it's not uncommon to have similar case statements in other parts of my code, in other contexts, where I check for identical values but supply different behavior.  Multiple case statements which repeat a common structure but vary the behavior fall pry to
+In real life if I'm switching on the order Symbol here in House it's not uncommon to have similar case statements in other parts of my code (in other contexts) where I check for identical values but supply different behavior.  Multiple case statements which repeat a common structure but vary the behavior fall pry to
 <a href="http://sourcemaking.com/refactoring/shotgun-surgery"
    target="_blank">
   shotgun surgery
 </a>
 and indicates that you are missing objects.
 
-It can be hard to see this.  We sometimes arrange code in ways that obscure it. The conditional on line 18 really should have two parts. If you write the conditional out you can see the objects.
+It can be hard to see this because we often arrange code in ways that obscure it. The conditional on line 18 really should have two parts. If you write the conditional out you can see the objects.
 
 Process:
 
 Name the concept.
 Create a class for each value that you are switching on.
 Implement a polymorphic (i.e., named after the concept) method in each class.
-Move the behavior from its old location in the branch of the conditional to the new method.
-Therefore, the problem switches from knowing why to switch and what to do, to knowing why to switch and what object to get.  This disperses behavior into small, reusable objects.
+Move the behavior from its old location in the branch of the conditional to the new method in the new object.
+
+Once you do this the problem switches from knowing both why you switch and what to do when you do, to knowing why to switch and what object to get when you do.  This disperses behavior into small, reusable objects.
 
 Also, if your only use of a value is to turn it into an object, that should have happened at the first possible place, back when the value was first known.  If you convert primitives into objects at first chance these objects will attract behavior and you'll avoid shotgun surgery changes. If you pass primitives around you'll switch on them everywhere and will miss the chance to collect all of this confusingly dispersed behavior in a single, cohesive, reusable object.
+
+
+
+Negative space is a thing.
+The optical illusion of vase, face. http://en.wikipedia.org/wiki/Rubin_vase
+Spreading the 'if' statements out hides the two specializations and makes it harder to create the objects.
+With two, really, who cares, but as soon as you have 3, watch for churn.
+
+
+
+<a name="note1">[1]</a>
+For full examples plus tests, see
+<a href="https://github.com/skmetz/ood_examples/tree/master/bottom_of_all_things/lib"
+   target="_blank">
+  the code
+</a>
+on github.

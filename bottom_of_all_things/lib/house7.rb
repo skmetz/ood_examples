@@ -16,7 +16,7 @@ class House
 
   attr_reader :pieces
 
-  def initialize(orderer = Default.new)
+  def initialize(orderer)
     @pieces = orderer.order(DATA)
   end
 
@@ -35,43 +35,44 @@ class House
 end
 
 
-class Default
-  def order(data)
-    data
+module Order
+  def self.for(choice)
+    Object.const_get(
+      'Order::' +
+      (choice || 'default').to_s.split('_').map(&:capitalize).join
+      ).new
   end
-end
 
-class Random
-  def order(data)
-    data.shuffle
+  class Default
+    def order(data)
+      data
+    end
   end
-end
 
-class MostlyRandom
-  def order(data)
-    data[0...-1].shuffle << data.last
+  class Random
+    def order(data)
+      data.shuffle
+    end
+  end
+
+  class MostlyRandom
+    def order(data)
+      data[0...-1].shuffle << data.last
+    end
   end
 end
 
 
 class Controller
   def play_house(choice = nil)
-    House.new(orderer_for(choice)).line(12)
-  end
-
-  def orderer_for(choice)
-    case choice
-    when :random
-      Random
-    when :mostly_random
-      MostlyRandom
-    else
-      Default
-    end.new
+    House.new(Order.for(choice)).line(12)
   end
 end
 
 
-puts "\n----\n"               + Controller.new.play_house()
+puts "\n----\n"               + Controller.new.play_house
 puts "\n--:random--\n"        + Controller.new.play_house(:random)
 puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)
+
+# Create an Order module to hold the Ordering classes, and put the factory
+# method on the module.

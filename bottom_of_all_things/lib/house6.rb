@@ -16,7 +16,7 @@ class House
 
   attr_reader :pieces
 
-  def initialize(orderer)
+  def initialize(orderer = Default.new)
     @pieces = orderer.order(DATA)
   end
 
@@ -35,37 +35,34 @@ class House
 end
 
 
-module Order
-  def self.for(choice)
-    Object.const_get(
-      'Order::' +
-      (choice || 'default').to_s.split('_').map(&:capitalize).join
-      ).new
+class Default
+  def order(data)
+    data
   end
+end
 
-  class Default
-    def order(data)
-      data
-    end
+class Random
+  def order(data)
+    data.shuffle
   end
+end
 
-  class Random
-    def order(data)
-      data.shuffle
-    end
-  end
-
-  class MostlyRandom
-    def order(data)
-      data[0...-1].shuffle << data.last
-    end
+class MostlyRandom
+  def order(data)
+    data[0...-1].shuffle << data.last
   end
 end
 
 
 class Controller
   def play_house(choice = nil)
-    House.new(Order.for(choice)).line(12)
+    House.new(orderer_for(choice)).line(12)
+  end
+
+  def orderer_for(choice)
+    Object.const_get(
+      (choice || 'default').to_s.split('_').map(&:capitalize).join
+      ).new
   end
 end
 
@@ -74,5 +71,9 @@ puts "\n----\n"               + Controller.new.play_house
 puts "\n--:random--\n"        + Controller.new.play_house(:random)
 puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)
 
-# Create an Order module to hold the Ordering classes, and put the factory
-# method on the module.
+
+# There's a convention, let's use it to get the orderer class name.
+# This makes the factory open closed.
+
+# It can go wrong and I'll blog about factory styles later.
+# But the factory clearly doesn't belong in Controller.

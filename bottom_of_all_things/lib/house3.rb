@@ -36,33 +36,15 @@ class House
   def initialize_pieces(order)
     case order
     when :random
-      Random.new.order(DATA)
+      DATA.shuffle
     when :mostly_random
-      MostlyRandom.new.order(DATA)
+      DATA[0...-1].shuffle << DATA.last
     else
-      Default.new.order(DATA)
+      DATA
     end
   end
 end
 
-
-class Default
-  def order(data)
-    data
-  end
-end
-
-class Random
-  def order(data)
-    data.shuffle
-  end
-end
-
-class MostlyRandom
-  def order(data)
-    data[0...-1].shuffle << data.last
-  end
-end
 
 class Controller
   def play_house(choice = nil)
@@ -70,14 +52,23 @@ class Controller
   end
 end
 
-
-puts "\n-- --\n"              + Controller.new.play_house
+puts "\n----\n"               + Controller.new.play_house
 puts "\n--:random--\n"        + Controller.new.play_house(:random)
 puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)
 
+# ----
+# This is the horse and the hound and the horn that belonged to the farmer sowing his corn that kept the rooster that crowed in the morn that woke the priest all shaven and shorn that married the man all tattered and torn that kissed the maiden all forlorn that milked the cow with the crumpled horn that tossed the dog that worried the cat that killed the rat that ate the malt that lay in the house that Jack built.
 
-# Each branch of the case statement could become a polymorphic method in
-# a class for the specific value in the condition.
-#
-# Here I take argument 'order' and the only use I make of it is to choose
-# a class in #initialize_pieces.  This choice should be made before we get here.
+# --:random--
+# This is the dog that worried the house that Jack built the malt that lay in the rat that ate the maiden all forlorn that milked the cat that killed the rooster that crowed in the morn that woke the horse and the hound and the horn that belonged to the man all tattered and torn that kissed the farmer sowing his corn that kept the priest all shaven and shorn that married the cow with the crumpled horn that tossed.
+
+# --:mostly_random--
+# This is the man all tattered and torn that kissed the cow with the crumpled horn that tossed the maiden all forlorn that milked the horse and the hound and the horn that belonged to the dog that worried the malt that lay in the rooster that crowed in the morn that woke the rat that ate the cat that killed the farmer sowing his corn that kept the priest all shaven and shorn that married the house that Jack built.
+
+# Now we have 3 choices, so can't use a boolean.
+# Switched to a symbol and case statement.
+# Here we're explicit about the default where before we were not. It
+# was there but the code obscured it.
+
+# Here I know the reason I might switch and the thing that should happen
+# when I do.

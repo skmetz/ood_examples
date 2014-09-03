@@ -16,8 +16,8 @@ class House
 
   attr_reader :pieces
 
-  def initialize(orderer = Default.new)
-    @pieces = orderer.order(DATA)
+  def initialize(order = nil)
+    @pieces = initialize_pieces(order)
   end
 
   def recite
@@ -31,6 +31,17 @@ class House
   private
   def phrase(number)
     pieces.last(number).join(" ")
+  end
+
+  def initialize_pieces(order)
+    case order
+    when :random
+      Random.new.order(DATA)
+    when :mostly_random
+      MostlyRandom.new.order(DATA)
+    else
+      Default.new.order(DATA)
+    end
   end
 end
 
@@ -53,25 +64,20 @@ class MostlyRandom
   end
 end
 
-
 class Controller
   def play_house(choice = nil)
-    House.new(orderer_for(choice)).line(12)
-  end
-
-  def orderer_for(choice)
-    case choice
-    when :random
-      Random
-    when :mostly_random
-      MostlyRandom
-    else
-      Default
-    end.new
+    House.new(choice).line(12)
   end
 end
 
 
-puts "\n----\n"               + Controller.new.play_house()
+puts "\n-- --\n"              + Controller.new.play_house
 puts "\n--:random--\n"        + Controller.new.play_house(:random)
 puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)
+
+
+# Each branch of the case statement could become a polymorphic method in
+# a class for the specific value in the condition.
+#
+# Here I take argument 'order' and the only use I make of it is to choose
+# a class in #initialize_pieces.  This choice should be made before we get here.
