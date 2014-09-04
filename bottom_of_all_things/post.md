@@ -159,13 +159,14 @@ While we certainly needed to do the first we could easily have gotten by without
     @pieces ||= DATA
   end</code></pre>
 
-This works, yes, but the code doesn't feel natural.  Once the number of variants forces us to change to a case statement it feels more 'right' to expect the case statement to provide every order, including the default.  Thus, Example 3 line 17 replaces Example 2 line 21 and all of the code that controls the concept of 'order' is now in the same place.
+This works, yes, but the code doesn't feel natural.  Once the number of variants forces us to change to a ```case``` statement it feels more 'right' to expect it to deal with all of the ordering, even the default.  Thus, Example 3 line 17 replaces Example 2 line 21 and all of the code that controls the concept of 'order' is now grouped together in the same place.
 
-The key idea here is that 'not changing the order' is a real thing, as real as randomizing or 'mostly' randomizing it.  It's not as if :random and :mostly\_random represent one concept and 'doing nothing' represents another.  There's one concept, 'order', and a number of different possibilities.  One possible way to order something is to _leave its current order unchanged_; this algorithm is as valid as any other.
+The key idea here is that 'not changing the order' is a real thing, as real as randomizing or 'mostly' randomizing it.  It's not as if :random and :mostly\_random represent one concept and 'doing nothing' represents another.  There's one concept, 'order', and a number of different possibilities.  One way to order something is to _leave its current order unchanged_; this algorithm is as valid as any other.
 
-Now that we're treating every order as a real thing, what next?  Well, as a thought exercise, what would you do if there was lots of code in each branch of the case statement, so much that you felt obliged to extract each branch into a method of its own.  What would you name these methods?
+Now that we're treating every order as a real thing, let's do a thought exercise.
+Image that each branch of the case statement contained many lines of code, so much that you felt obliged to extract them into methods of their own.  What would you name the extracted methods?
 
-Example 3a does just this.  It names the concepts represented by each branch and moves the code into new methods with those names.  
+Example 3a illustrates this.  You can think of it as naming concepts represented by each branch and moving the code into new methods with those names.  
 
 ###Example 3a
 <pre class="line-numbers"><code class="language-ruby">class House
@@ -194,14 +195,11 @@ Example 3a does just this.  It names the concepts represented by each branch and
   end
   # ...</code></pre>
 
-These ```xxx_order``` methods all represent 'order' variants.  The fact that we can even imagine the name ```default_order``` supports the notion that it's the same kind of thing as ```random_order``` or ```mostly_random_order```.
+These ```xxx_order``` methods above represent 'order' variants.  Unsurprisingly, in most cases the method names reflect the symbol names that we check in the case statement.  Symbol ```:random``` becomes method ```#random_order```, ```:mostly_random``` becomes ```#mostly_random__order``` and the else branch becomes ```#default_order```.  The fact that we can  imagine the name ```default_order``` supports the notion that the code in the else branch represents the same kind of thing as the others.
 
-Once
+Now that we've explicitly named these things we can see that our names have a repeating suffix. When methods have a repeating prefix or suffix it's a sign that you have untapped objects hidden within your code. Going through the exercise of giving the case statement branches explicit names helps to identify these missing objects.  Instead of forcing ```House``` to know both the values of order upon which it should switch and what to do in every case, we should dispearse the 'what to do' logic into other objects.  
 
-  1. the choice of 'order' is controlled in a single place and
-  2. each order variant is given a name,
-
-it's becomes easy to see 'order' objects hidden in this code.  Instead of forcing ```House``` to know both the values of order upon which it should switch and what to do in every case, we can dispearse the 'what to do' logic into other objects.  Example 4 creates a new class for each kind of order.
+Example 4 creates a new class for each kind of order.
 
 ###Example 4
 
@@ -238,17 +236,15 @@ class MostlyRandom
   end
 end</code></pre>
 
-Example 4 created three new classes, each of which plays the 'orderer' role.  Each 'orderer' implements #order to take a list and return it in the correct order.
+Example 4 creates three new classes, each of which plays the 'orderer' role.  Each 'orderer' implements #order to take a list and return it in the correct order.
 
-These things are extremely easy to test. :-)  It's a feature.
+These new classes are extremely easy to test. :-)
 
-xxxxxxxxxxxxxxxxxx
-
-Let's do one small refactoring before the next point.  In Example 4a, the
+Example 4a slightly rearranges the case statement (and likely offends some Rubyists, but that's for another day) to make it obvious that the purpose of this case statement is to choose the class.
 
 ###Example 4a
 
-<pre class="line-numbers" data-line="13"><code class="language-ruby">class House
+<pre class="line-numbers" data-line="11"><code class="language-ruby">class House
   # ...
   def initialize_pieces(order)
     case order
@@ -263,13 +259,17 @@ Let's do one small refactoring before the next point.  In Example 4a, the
     # ...
 end</code></pre>
 
-House takes a symbol and uses it for nothing other than to convert it to a class.
+If this syntax is new to you remember that the ```case...end``` statement returns an object to which you can send a message.  The case statement above returns a class; on line 11 we send ```new.order(DATA)``` to that class.  Thus, the case statement's responsibility is to return a class that plays the role of 'orderer'; ordering is a separate task that happens afterwards.
 
-The thing that passed me the symbol knew what they wanted, they should create and give me the class. Push the object creation back to them.
+Example 4a now reveals a curious thing.  ```House``` is initialized on the ```order``` symbol,  which it immediately converts it into a _different_ object. You can think of ```House``` as being _injected_ with a behaviorally impaired kind of 'orderer' (the symbol) which it is then forced to convert into a more robust kind of 'orderer' (an instance of ```Random```, ```MostlyRandom``` or ```Default```)<a href="#note3">[3]</a>.  In this implementation ```House``` depends on (knows about) many things.  It knows the names of all possible symbols, the names all of the 'orderer' class, and the mapping between the two.  Many distant changes might force changes to ```House``` and it would be more flexible if it knew less.
+
+We could spare ```House``` many of these dependencies if we injected the object it actually wants.
+
+Example 5 does exactly that.  Here ```House``` is injected with an 'orderer' and the ```Controller``` is now responsible for converting the symbol to the right orderer object.
 
 ###Example 5
 
-<pre class="line-numbers"><code class="language-ruby">class House
+<pre class="line-numbers" data-line="13,17-23"><code class="language-ruby">class House
   # ...
   attr_reader :pieces
 
@@ -278,7 +278,6 @@ The thing that passed me the symbol knew what they wanted, they should create an
   end
   # ...
 end
-
 
 class Controller
   def play_house(choice = nil)
@@ -297,7 +296,11 @@ class Controller
   end
 end</code></pre>
 
-Text, text, text
+The responsibility for converting feeble 'orderer' objects into more robust ones belongs no more in ```Controller``` than it did in ```House```, but this new code _is_ an improvement. We want to do this conversion at the first opportunity and we're pushing it back up the stack, looking for it's natural home.
+
+With this change```House``` is open/closed to new 'orderers'; you can inject any object you like as long as it implements ```#order```.  ```House``` also has fewer dependencies; it can collaborate with new 'orderers' without being forced to change.
+
+```Controller#orderer_for```, however, is _not_ yet open/closed. The ```#orderer_for``` method above must change if you add new 'orderers'.  If you're willing to depend on a naming convention and to allow a bit of metaprogramming (as in  Example 6), you can take a symbol and return the correct 'orderer' object.
 
 ###Example 6
 
@@ -310,7 +313,9 @@ Text, text, text
   end
 end</code></pre>
 
-May as well move the factory to an Order module.
+Example 6 makes ```Controller#orderer_for``` open/closed.  As long as you follow the naming convention, it will convert any symbol to an instance of its corresponding class.
+
+The ```#orderer_for``` method was bad enough when it was merely in the wrong place but now that we've complicated the code in the name of making it open/closed it feels increasingly important to put this responsibility where it belongs.  We have a number of things that revolved around the concept of 'order' (three classes and this factory method), they should probably all be together.  Example 7 creates a ```Order``` module to hold them all.
 
 ###Example 7
 
@@ -320,11 +325,30 @@ May as well move the factory to an Order module.
       'Order::' +
       (choice || 'default').to_s.split('_').map(&:capitalize).join
       ).new
-  end</code></pre>
+  end
 
-May as well also put all of the Orderers in the Order module.
+  class Default
+    def order(data)
+      data
+    end
+  end
 
-###Full Example
+  class Random
+    def order(data)
+      data.shuffle
+    end
+  end
+
+  class MostlyRandom
+    def order(data)
+      data[0...-1].shuffle << data.last
+    end
+  end
+end</code></pre>
+
+Here's a complete listing of the code as it now exists.
+
+###Example: Complete
 
 <pre class="line-numbers"><code class="language-ruby">class House
   DATA = [
@@ -362,7 +386,6 @@ May as well also put all of the Orderers in the Order module.
   end
 end
 
-
 module Order
   def self.for(choice)
     Object.const_get(
@@ -390,47 +413,110 @@ module Order
   end
 end
 
-
 class Controller
   def play_house(choice = nil)
     House.new(Order.for(choice)).line(12)
   end
 end
 
-
 puts "\n----\n"               + Controller.new.play_house
 puts "\n--:random--\n"        + Controller.new.play_house(:random)
 puts "\n--:mostly_random--\n" + Controller.new.play_house(:mostly_random)</code></pre>
 
-Passing the random Boolean (Example 1, line 7) or the order Symbol (Example 2, line 9) to House forces House to know about every possible value and to supply the appropriate behavior for each case. This is a form of
+On final thought before we return to the original problem of 'code shapes'. I realize this is a small example and that these techniques can feel like overkill for a problem of this size.  Perhaps they are; I wouldn't resist if you insisted that it were so.  However, there _are_ bigger problems for which these techniques are the perfect solution.  I reply on your ability to see that there's a larger abstraction. You can't use these techniques there unless you learn them here.  
+
+###Reprise of Example 2
+But what about the shapes?
+Remember the first change in requirements, where the concept of 'order' had code on both line 4 and line 21?
+
+<pre class="line-numbers" data-line="4,21"><code class="language-ruby">class House
+  # ...
+  def initialize(random = false)
+    @pieces = DATA.shuffle if random
+  end
+
+  def recite
+    (1..pieces.length).map {|i| line(i)}.join("\n")
+  end
+
+  def line(number)
+    "This is #{phrase(number)}.\n"
+  end
+
+  private
+  def phrase(number)
+    pieces.last(number).join(" ")
+  end
+
+  def pieces
+    @pieces ||= DATA
+  end
+end</code></pre>
+
+The shape of this code hides objects.  What if, instead of the above, we wrote it down in the sipmlest, most explicit way possible?
+
+<pre class="line-numbers"><code class="language-ruby">class House
+  # ...
+  attr_reader :pieces
+  def initialize(random = false)
+    @pieces =
+      if random
+        DATA.shuffle
+      else
+        DATA
+      end
+  end
+
+  def recite
+    (1..pieces.length).map {|i| line(i)}.join("\n")
+  end
+
+  def line(number)
+    "This is #{phrase(number)}.\n"
+  end
+
+  private
+  def phrase(number)
+    pieces.last(number).join(" ")
+  end
+end</code></pre>
+
+
+
+###Summary
+
+
+
+Code shape matters, especially when it comes to conditionals.  Dividing a conditional into two parts and separating these parts in code makes it harder to see underlying objects.  Clarity can be achieved by putting all of the parts of a conditional back together. Write simple code, and write _all_ of the code.  Once you do, new objects will reveal themselves.
+
+The 'default' is just another kind of specialization.  Negative space is a thing just like positive space; in the
+<a href="http://en.wikipedia.org/wiki/Rubin_vase"
+   target="_blank">
+   Rubin Vase image
+</a>
+the face and the vase are equally real.
+
+
+
+Once you do you'll see that the 'default' is often the exact same kind of thing as the exception and that
+
 <a href="http://sourcemaking.com/refactoring/primitive-obsession"
    target="_blank">
   primitive obsession
-</a>.
-These arguments are objects; you shouldn't be making decisions about what to do based on their values, you should instead send them messages and reply on them to supply their own behavior.  
+</a>
+indicates that you are missing objects.
+Turn primatives into robust domain specific objects at the first opportunity.  Don't pass them around.
 
-In an example small enough to fit into a blog post this code isn't so bad but it stands proxy for the real world where grown-up variants are much more painful.  
 
-In real life if I'm switching on the order Symbol here in House it's not uncommon to have similar case statements in other parts of my code (in other contexts) where I check for identical values but supply different behavior.  Multiple case statements which repeat a common structure but vary the behavior fall pry to
 <a href="http://sourcemaking.com/refactoring/shotgun-surgery"
    target="_blank">
   shotgun surgery
 </a>
-and indicates that you are missing objects.
+indicates that you are missing objects.
+
+
 
 It can be hard to see this because we often arrange code in ways that obscure it. The conditional on line 18 really should have two parts. If you write the conditional out you can see the objects.
-
-Process:
-
-Name the concept.
-Create a class for each value that you are switching on.
-Implement a polymorphic (i.e., named after the concept) method in each class.
-Move the behavior from its old location in the branch of the conditional to the new method in the new object.
-
-Once you do this the problem switches from knowing both why you switch and what to do when you do, to knowing why to switch and what object to get when you do.  This disperses behavior into small, reusable objects.
-
-Also, if your only use of a value is to turn it into an object, that should have happened at the first possible place, back when the value was first known.  If you convert primitives into objects at first chance these objects will attract behavior and you'll avoid shotgun surgery changes. If you pass primitives around you'll switch on them everywhere and will miss the chance to collect all of this confusingly dispersed behavior in a single, cohesive, reusable object.
-
 
 
 Negative space is a thing.
@@ -441,13 +527,11 @@ With two, really, who cares, but as soon as you have 3, watch for churn.
 
 
 <a name="note1">[1]</a>
-All of this
 <a href="https://github.com/skmetz/ood_examples/tree/master/bottom_of_all_things/lib"
    target="_blank">
-  code
+  This code
 </a>
 is on github.
-
 
 
 <a name="note2">[2]</a>
@@ -470,10 +554,16 @@ which in turn are one wikipedia hop from
    target="_blank">
   the complexity of songs
 </a>
-which in turn link to the article on
+which in link to the article on
 <a href="http://en.wikipedia.org/wiki/Computational_complexity_theory"
    target="_blank">
   computational complexity theory</a>.
-Tales and songs work great as examples because they let us practice dealing with complexity without requiring that we learn about revolving bank loans or shipping containers.  
+Tales and songs are great as examples because they let us practice dealing with complexity without requiring that we learn about revolving bank loans or shipping containers. They provide surprisingly complex problems within simple, well-known domains.
 
-The domains are simple but the problems are surprisingly complex.
+
+<a nane="#note3">[3]</a>
+This is a form of
+<a href="http://sourcemaking.com/refactoring/primitive-obsession"
+   target="_blank">
+  primitive obsession
+</a>
