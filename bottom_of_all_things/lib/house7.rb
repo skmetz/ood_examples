@@ -16,7 +16,7 @@ class House
 
   attr_reader :pieces
 
-  def initialize(orderer)
+  def initialize(orderer = Order::Default.new)
     @pieces = orderer.order(DATA)
   end
 
@@ -36,7 +36,7 @@ end
 
 
 module Order
-  def self.for(choice)
+  def self.new(choice)
     Object.const_get(
       'Order::' +
       (choice || 'default').to_s.split('_').map(&:capitalize).join
@@ -65,7 +65,7 @@ end
 
 class Controller
   def play_house(choice = nil)
-    House.new(Order.for(choice)).line(12)
+    House.new(Order.new(choice)).line(12)
   end
 end
 

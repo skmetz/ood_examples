@@ -14,7 +14,7 @@ class House
     'the house that Jack built',
   ]
 
-  def initialize(random = false)
+  def initialize(random)
     @pieces = DATA.shuffle if random
   end
 

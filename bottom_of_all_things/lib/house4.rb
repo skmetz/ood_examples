@@ -16,7 +16,7 @@ class House
 
   attr_reader :pieces
 
-  def initialize(order = nil)
+  def initialize(order)
     @pieces = initialize_pieces(order)
   end
 

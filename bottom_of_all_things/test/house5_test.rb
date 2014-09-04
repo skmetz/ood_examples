@@ -2,12 +2,12 @@ gem 'minitest', '~> 5.3'
 require 'minitest/autorun'
 require 'minitest/pride'
 
-require_relative '../lib/house7'
+require_relative '../lib/house5'
 
 class HouseTest < Minitest::Test
   attr_reader :tale
   def setup
-    @tale = House.new
+    @tale = House.new(Default.new)
   end
 
   def test_line_1

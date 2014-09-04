@@ -7,7 +7,7 @@ require_relative '../lib/house7'
 class HouseTest < Minitest::Test
   attr_reader :tale
   def setup
-    @tale = House.new
+    @tale = House.new(Order::Default.new)
   end
 
   def test_line_1
