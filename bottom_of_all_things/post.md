@@ -520,7 +520,7 @@ _<a href="http://www.sandimetz.com/courses/"
 
 _<a href="http://www.sandimetz.com/subscribe"
   target="_blank">
-  Sign up</a> for my newsletter._
+  Sign up</a> for my newsletter, which contains random thoughts that never make it into blog posts._
 </strong>
 <br/>
 <br/>
