@@ -37,8 +37,7 @@ end
 
 module Order
   def self.new(choice)
-    Object.const_get(
-      'Order::' +
+    const_get(
       (choice || 'default').to_s.split('_').map(&:capitalize).join
       ).new
   end
